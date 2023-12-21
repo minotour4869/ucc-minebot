@@ -8,6 +8,7 @@
     "discord.js": "^14.14.1",
     "dotenv": "^16.3.1",
     "js-md5": "^0.8.3",
+    "mongodb": "^6.3.0",
     "xmlhttprequest": "^1.8.0"
   },
   "type": "module",

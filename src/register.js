@@ -29,6 +29,14 @@ const commands = [
                 required: true
             }
         ]
+    },
+    {
+        name: 'unlink',
+        description: 'Unlink your Minecraft account from your discord'
+    },
+    {
+        name: 'info',
+        description: 'Show your current linking Minecraft account'
     }
 ];
 
