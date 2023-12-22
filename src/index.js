@@ -4,8 +4,19 @@ import uuidOffline from "./uuid.js";
 import axios from "axios";
 import fs from "fs"
 import { MongoClient } from "mongodb";
+import Rcon from "rcon";
 
-const whitelist_dir = "whitelist.json";
+const rcon = new Rcon(
+    process.env.RCON_HOST,
+    process.env.RCON_PORT,
+    process.env.RCON_PASSWORD
+);
+rcon.connect()
+.then(() => {
+    console.log("Connected to rcon");
+});
+
+const whitelist_dir = "../whitelist.json";
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 const mongoUrl = "mongodb://" + process.env.MONGODB_USER + ":" + process.env.MONGODB_PWD + "@localhost:27017"
 const mongoDb = new MongoClient(mongoUrl);
@@ -56,10 +67,7 @@ client.on('interactionCreate', async interaction => {
             }
             whitelist.push(data);
             fs.writeFileSync(whitelist_dir, JSON.stringify(whitelist, null, 4));
-            await interaction.reply({
-                content: `Created new whitelist entry for \`${username}\``,
-                ephemeral: true,
-            });
+            rcon.send("/whitelist reload");
         }
 
         var user_info = {
@@ -75,7 +83,11 @@ client.on('interactionCreate', async interaction => {
                     user: interaction.user.id,
                     uuid: user_info,
                     mode: "offline"
-                })
+                });
+                await interaction.reply({
+                    content: `Created new whitelist entry for \`${username}\``,
+                    ephemeral: true,
+                });
             } else if (type === 'online') {
                 axios.get(`https://api.mojang.com/users/profiles/minecraft/${username}`)
                 .then((response) => {
@@ -86,7 +98,11 @@ client.on('interactionCreate', async interaction => {
                             user: interaction.user.id,
                             uuid: user_info,
                             mode: "online"
-                        }).then()
+                        }).then();
+                        interaction.reply({
+                            content: `Created new whitelist entry for \`${username}\``,
+                            ephemeral: true,
+                        });
                     }
                     else throw "not_found";
                 })
@@ -124,6 +140,7 @@ client.on('interactionCreate', async interaction => {
             }
         }
         fs.writeFileSync(whitelist_dir, JSON.stringify(whitelist, null, 4));
+        rcon.send("/whitelist reload");
         await userTable.deleteOne(data[0]);
         await interaction.reply({
             content: `Unlinked account \`${username}\``,
