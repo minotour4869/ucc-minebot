@@ -84,7 +84,7 @@ client.on('interactionCreate', async interaction => {
                         updateWhitelist(user_info);
                         userTable.insertOne({
                             user: interaction.user.id,
-                            uuid: user_indo,
+                            uuid: user_info,
                             mode: "online"
                         }).then()
                     }
