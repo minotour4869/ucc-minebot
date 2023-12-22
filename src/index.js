@@ -37,11 +37,11 @@ client.on('interactionCreate', async interaction => {
         
         // Check user have in whitelist or not
         const updateWhitelist = async (data) => {
-            data.id = data.id.substring(0, 8) + '-' +
-                      data.id.substring(8, 12) + '-' + 
-                      data.id.substring(12, 16) + '-' + 
-                      data.id.substring(16, 20) + '-' + 
-                      data.id.substring(20);
+            data.uuid = data.uuid.substring(0, 8) + '-' +
+                        data.uuid.substring(8, 12) + '-' + 
+                        data.uuid.substring(12, 16) + '-' + 
+                        data.uuid.substring(16, 20) + '-' + 
+                        data.uuid.substring(20);
         
             let whitelist = JSON.parse(fs.readFileSync(whitelist_dir));
             for (const id in whitelist) {
@@ -55,7 +55,7 @@ client.on('interactionCreate', async interaction => {
                 }
             }
             whitelist.push(data);
-            fs.writeFileSync(whitelist_dir, JSON.stringify(whitelist));
+            fs.writeFileSync(whitelist_dir, JSON.stringify(whitelist, null, 4));
             await interaction.reply({
                 content: `Created new whitelist entry for \`${username}\``,
                 ephemeral: true,
@@ -63,13 +63,13 @@ client.on('interactionCreate', async interaction => {
         }
 
         var user_info = {
-            id: null,
+            uuid: null,
             name: username,
         };
 
         try {
             if (type === 'offline') {
-                user_info.id = uuidOffline(username);
+                user_info.uuid = uuidOffline(username);
                 updateWhitelist(user_info);
                 await userTable.insertOne({
                     user: interaction.user.id,
@@ -80,10 +80,11 @@ client.on('interactionCreate', async interaction => {
                 axios.get(`https://api.mojang.com/users/profiles/minecraft/${username}`)
                 .then((response) => {
                     if (response.status === 200) {
-                        updateWhitelist(response.data);
+                        user_info.uuid = response.data.id
+                        updateWhitelist(user_info);
                         userTable.insertOne({
                             user: interaction.user.id,
-                            uuid: response.data,
+                            uuid: user_indo,
                             mode: "online"
                         }).then()
                     }
@@ -122,7 +123,7 @@ client.on('interactionCreate', async interaction => {
                 break;
             }
         }
-        fs.writeFileSync(whitelist_dir, JSON.stringify(whitelist));
+        fs.writeFileSync(whitelist_dir, JSON.stringify(whitelist, null, 4));
         await userTable.deleteOne(data[0]);
         await interaction.reply({
             content: `Unlinked account \`${username}\``,
