@@ -66,6 +66,7 @@ client.on('interactionCreate', async interaction => {
             whitelist.push(data);
             fs.writeFileSync(whitelist_dir, JSON.stringify(whitelist, null, 4));
             rcon.send("/whitelist reload");
+            rcon.send("/reload");
         }
 
         var user_info = {
@@ -151,6 +152,7 @@ client.on('interactionCreate', async interaction => {
         }
         fs.writeFileSync(whitelist_dir, JSON.stringify(whitelist, null, 4));
         rcon.send("/whitelist reload");
+        rcon.send("/reload");
         await userTable.deleteOne(data[0]);
         await interaction.reply({
             content: `Unlinked account \`${username}\``,
