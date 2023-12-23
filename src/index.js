@@ -11,12 +11,10 @@ const rcon = new Rcon(
     process.env.RCON_PORT,
     process.env.RCON_PASSWORD
 );
-rcon.connect()
-.then(() => {
-    console.log("Connected to rcon");
-});
+rcon.connect();
 
-const whitelist_dir = "../whitelist.json";
+const easyauth_dir = process.env.EA_CFG;
+const whitelist_dir = process.env.WHITELIST_CFG;
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 const mongoUrl = "mongodb://" + process.env.MONGODB_USER + ":" + process.env.MONGODB_PWD + "@localhost:27017"
 const mongoDb = new MongoClient(mongoUrl);
@@ -78,6 +76,12 @@ client.on('interactionCreate', async interaction => {
         try {
             if (type === 'offline') {
                 user_info.uuid = uuidOffline(username);
+
+                // Add user to forced offline mode
+                let ea_data = JSON.parse(fs.readFileSync(easyauth_dir));
+                ea_data.main.forcedOfflinePlayers.push(username.toLowerCase());
+                fs.writeFileSync(easyauth_dir, JSON.stringify(ea_data, null, 4));
+
                 updateWhitelist(user_info);
                 await userTable.insertOne({
                     user: interaction.user.id,
@@ -131,6 +135,12 @@ client.on('interactionCreate', async interaction => {
             return;
         }
         let username = data[0].uuid.name;
+        if (data[0].mode == 'offline') {
+            let ea_data = JSON.parse(fs.readFileSync(easyauth_dir));
+            for (const id in ea_data.main.forcedOfflinePlayers) 
+                if (ea_data.main.forcedOfflinePlayers[id] == username.toLowerCase()) ea_data.main.forcedOfflinePlayers.splice(id);
+            fs.writeFileSync(easyauth_dir, JSON.stringify(ea_data, null, 4));
+        }
 
         let whitelist = JSON.parse(fs.readFileSync(whitelist_dir));
         for (const id in whitelist) {
